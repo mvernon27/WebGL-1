@@ -1,0 +1,116 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL-1</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+</body>
+<script src="three.js"></script>
+
+<script>
+    var objects = [];
+	var scene = new THREE.Scene();
+	var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+	var renderer = new THREE.WebGLRenderer();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	document.body.appendChild( renderer.domElement );
+
+    var sphereCount = 5000;
+    var sphere;
+    var geometry = new THREE.SphereGeometry(.05,6,8);
+    var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+
+    function getRandomNum(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    for ( var i = 0; i < sphereCount; i++ ) {
+        sphere = new THREE.Mesh( geometry, material );
+        sphere.position.set(getRandomNum(-5,5),getRandomNum(-5,5),0)
+        scene.add( sphere );
+        objects.push(sphere);
+    }
+    var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    scene.add( directionalLight );
+
+    camera.position.z = 5;
+    
+    var raycaster = new THREE.Raycaster();
+    raycaster.params.Points.threshold = 20;
+    var mouse = new THREE.Vector2();
+    var mouseDown = false;
+
+    function onMouseDown( event ) {
+        mouseDown = true;
+    }
+    window.addEventListener( 'mousedown', onMouseDown, false );
+
+    function onMouseUp( event ) {
+        mouseDown = false;
+    }
+    window.addEventListener( 'mouseup', onMouseUp, false );
+
+function onMouseMove( event ) {
+    if(mouseDown == true){
+    event.preventDefault();
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+    vector.unproject( camera );
+	var dir = vector.sub( camera.position ).normalize();
+	var distance = - camera.position.z / dir.z;
+    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+    
+	raycaster.setFromCamera( mouse, camera );
+
+    for ( var i = 0; i < objects.length; i++ ) {
+        var distX = objects[i].position.x-pos.x;
+        var distY = objects[i].position.y-pos.y;
+
+        if(Math.abs(distX) < .5 && Math.abs(distY) < .5)
+        {
+            if(distX > 0) {
+                objects[i].position.x += Math.abs(distX/10);
+            }
+            if(distX < 0) {
+                objects[i].position.x -= Math.abs(distX/10);
+            }
+            if(distY > 0) {
+                objects[i].position.y += Math.abs(distY/10);
+            }
+            if(distY < 0) {
+                objects[i].position.y -= Math.abs(distY/10);
+            }
+        }
+    }
+    // var intersects = raycaster.intersectObjects( objects, true );
+    // console.log(pos.x)
+	// for ( var i = 0; i < intersects.length; i++ ) {
+    //     var o = intersects[i];
+	// 	o.object.material.color.set( 0xffffff )
+    //     console.log('intercepted')
+    //     console.log(o)
+    //     o.object.position.set((o.object.position.x+pos.x)/2,o.object.position.y,o.object.position.z);
+    // }
+    window.requestAnimationFrame(render);
+    }
+}
+
+function render() {
+	renderer.render( scene, camera );
+}
+
+window.addEventListener( 'mousemove', onMouseMove, false );
+
+window.requestAnimationFrame(render);
+
+
+
+</script>
+
+</html>
